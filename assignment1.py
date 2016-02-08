@@ -225,6 +225,13 @@ def least_cost_path(graph, start, dest, cost):
     
 	return reached
 
+def tree_to_graph(tree):
+    sorted_graph = Graph()
+    for vert in tree.pop()
+        sorted_graph.add_edge(vert[0], vert[1])
+    
+    return sorted_graph
+
 def find_cost (edges, cost):
     return sum([cost(u, v) for (u, v) in edges])
 
