@@ -57,6 +57,7 @@ class WeightedGraph (Graph):
             self._coord[vertex] = (latitude,longitude)
 
     def add_edge (self, source, destination):
+    	cost_distance.g = self
         self._alist[source][destination] = self.cost_distance(source,destination)
 
     def get_weight (self, source, destination):
@@ -88,9 +89,8 @@ class WeightedGraph (Graph):
         '''Checks whether vertex is in the graph.
         '''
         return vertex in self._alist
-    
-
-def cost_distance(u,v):
+        
+    def cost_distance(u,v):
 	'''
 	Takes u and v as vertices in the graph (g)
 	uses Euclidean distance calculation and returns distance in 100,000 degree form
@@ -98,6 +98,7 @@ def cost_distance(u,v):
 	'''
 	return sqrt(abs(cost_distance.g._coord[u][0] - cost_distance.g._coord[v][0])**2
 	+abs(cost_distance.g._coord[u][1] - cost_distance.g._coord[v][1])**2)
+    
 
 class UndirectedGraph (WeightedGraph):
     '''An undirected graph has edges that are unordered pairs of
