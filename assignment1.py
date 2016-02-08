@@ -1,3 +1,5 @@
+from enum import Enum
+
 class UnionFind:
 
     def __init__ (self, xs=[]):
@@ -214,3 +216,60 @@ least_cost_path(g,?,?,g.cost_distance())
 #~ 
     #~ mst = kruskal(wg, wg.get_weight)
     #~ assert find_cost(mst, wg.get_weight) == 17
+
+def svr()
+	State = Enum('State', 'R N AN W A E ERR')
+	state = State.R
+
+	while state != E && state != ERR:
+		if state == R:                                          		 #wait for cli request
+			print(state)
+			l = input().split()                                         	#get request
+			if l[0] == "R":                                         	#if line actualy request
+				inp = [int(l[i]) for i in range(1,5)]                   	#convert input to int
+				latStart, lonStart, latDest, lon Dest = inp[0:4]        	#get data from request
+				state = State.N                                         	#next step / first acknowledge
+				
+		elif state == N:                                                #find path
+			print(state)
+            		path = leastCostPath(g, start, dest, cost)                  #get path
+            		print("N", len(path))                                       #send cli path len
+            		if len(path) == 0:                                          #if no path
+                		state = State.R                                         #   wait for new 'R'
+            		else:                                                       #else
+                		state = State.AN                                        #   next step
+                
+		elif state == AN:                                               #first acknowledge
+			print(state)
+            		t = input.split()                                           #get N data
+			if t[0] == "N" and int(t[1]) != 0:                          #if data is actually N and not 0
+                		print("A")                                              #   send first acknowledgement
+				state = State.W                                         #   next step
+				
+		elif state == W:                                                #send next cords in path
+			print(state)
+			if len(path) == 0:                                          #if path at dest
+				state = State.E                                         #   end step
+			elif len(path) != 0:                                        #else
+				print("W", lat, lon, sep = ' ')                         #   send cords
+				state = State.A                                         #   next acknowledge
+			
+		elif state == A:                                                #acknowledge
+			print(state)
+			inp = input()                                               #get W data
+			if inp == "W":                                              #if actualy W data
+                		print("A")                                              #   send acknowledge
+				state = State.W                                         #   next W
+			elif inp == "E"                                             #elif E
+				state = State.E                                         #   end step
+				
+		elif state == E:                                                #path done
+            		print("Finished giving path or 'R'")                        #path done
+			print(state)                                                #path done
+			
+		else:                                                           #ERROR
+            		state = State.ERR                                           #ERROR
+			print("There was an error")                                 #ERROR
+			print(state)                                                #ERROR
+			
+	print("Done")
