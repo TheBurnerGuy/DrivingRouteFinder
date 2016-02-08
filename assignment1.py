@@ -186,14 +186,43 @@ def kruskal (graph, cost):
     return tree
 
 def least_cost_path(graph, start, dest, cost):
-	tree = kruskal(graph,cost)
+	#Special case: start is dest
+    if start==dest:
+        return [].append(start)
+    tree = kruskal(graph,cost)
 	reached = [].append(start)
+    reached_l = [].append(dest)
 	new_graph = tree_to_graph(tree)
-	while todo:
-		#unfinished
-		vertex =
-		tree
-		
+    todo = [].append(new_graph.neighbours(start).pop())
+	while todo:#first run where it looks for the representative vertex from start
+		end = todo.pop()
+        if end in new_graph.neighbours(end):
+            #If end is pointing to itself, then representative is found and break
+            break
+        #Else add neighbours of end into todo and loop
+        end = new_graph.neighbours(end).pop()
+        reached.append(end)
+        todo.append(end)
+    
+    todo = [].append(new_graph.neighbours(dest)
+    while todo:#second run where it looks for the representative vertex from dest
+        end = todo.pop()
+        if end in new_graph.neighbours(end):
+            #If end is pointing to itself, then representative is found and break
+            break
+        #Else add neighbours of end into todo and loop
+        end = new_graph.neighbours(end).pop()
+        reached.append(end)
+        todo.append(end)
+
+    #Check if representative of start and dest are same, otherwise return empty list
+    if reached[-1] != reached[0]:
+        return list()
+    
+    #add start and dest lists together then return final list
+    reached_l = reached_l.reverse().pop(0)
+    reached = reached + reached_l
+    
 	return reached
 
 def find_cost (edges, cost):
