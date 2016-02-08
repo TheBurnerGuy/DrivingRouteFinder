@@ -1,4 +1,5 @@
 from enum import Enum
+from math import sqrt
 
 class UnionFind:
 
@@ -101,7 +102,7 @@ class WeightedGraph (Graph):
 
 	def add_edge (self, source, destination):
 		cost_distance.g = self
-		self._alist[source][destination] = self.cost_distance(source,destination)
+		self._alist[source][destination] = cost_distance(source,destination)
 
 	def get_weight (self, source, destination):
 		'''Returns the weight associated with this edge.
@@ -133,14 +134,15 @@ class WeightedGraph (Graph):
 		'''
 		return vertex in self._alist
 		
-	def cost_distance(u,v):
+	
+def cost_distance(u,v):
 		'''
 	Takes u and v as vertices in the graph (g)
 	uses Euclidean distance calculation and returns distance in 100,000 degree form
 	Requires g as the graph before calling.'''
 		return sqrt(abs(cost_distance.g._coord[u][0] - cost_distance.g._coord[v][0])**2
 		+abs(cost_distance.g._coord[u][1] - cost_distance.g._coord[v][1])**2)
-	
+
 
 class UndirectedGraph (WeightedGraph):
 	'''An undirected graph has edges that are unordered pairs of
@@ -158,14 +160,14 @@ def latlon_to_integer(coord):
 	return int(float(coord)*100000)
 
 def build_graph():
-	g = UndirectedGraph()
+	g = WeightedGraph()
 	with open("edmonton-roads-2.0.1.txt") as file: # Assumes filename is edmonton-roads-2.0.1.txt
 		for line in file: # Variable 'line' loops over each line in the file
 			line = line.strip().split(',') # Remove trailing newline character and splits line into list
 			if line[0] == 'V':
-				g.add_vertex(line[1],latlon_to_integer(line[2]),latlon_to_integer(line[3]))
+				g.add_vertex(int(line[1]),latlon_to_integer(line[2]),latlon_to_integer(line[3]))
 			if line[0] == 'E':
-				g.add_edge(line[1],line[2])
+				g.add_edge(int(line[1]),int(line[2]))
 	return g
 	
 def kruskal (graph, cost):
@@ -187,22 +189,27 @@ def kruskal (graph, cost):
 def least_cost_path(graph, start, dest, cost):
 	#Special case: start is dest
 	if start==dest:
+		print("0.5")
+		print(type([].append(start)))
 		return [].append(start)
 	tree = kruskal(graph,cost)
 	reached = [].append(start)
 	reached_l = [].append(dest)
 	new_graph = tree_to_graph(tree)
 	todo = [].append(new_graph.neighbours(start).pop())
+	print("1")
 	while todo:#first run where it looks for the representative vertex from start
 		end = todo.pop()
 		if end in new_graph.neighbours(end):
 			#If end is pointing to itself, then representative is found and break
+			print("1.5")
 			break
 		#Else add neighbours of end into todo and loop
 		end = new_graph.neighbours(end).pop()
 		reached.append(end)
 		if end == dest:
 			#If end is destination, return reached
+			print("2")
 			return reached
 		todo.append(end)
 	
@@ -211,28 +218,35 @@ def least_cost_path(graph, start, dest, cost):
 		end = todo.pop()
 		if end in new_graph.neighbours(end):
 			#If end is pointing to itself, then representative is found and break
+			print("2.5")
 			break
 		#Else add neighbours of end into todo and loop
 		end = new_graph.neighbours(end).pop()
 		reached_l.append(end)
 		if end == start:
 			#If end is start, return reached
+			print("3")
 			return reached_l.reverse()
 		todo.append(end)
 
 	#Check if representative of start and dest are same, otherwise return empty list
 	if reached[-1] != reached[0]:
+		print("4")
 		return list()
 	
 	#add start and dest lists together then return final list
 	reached_l = reached_l.reverse().pop(0)
 	reached = reached + reached_l
 	
+	print("5")
+	print(reached)
+	print(type(reached))
 	return reached
 
 def tree_to_graph(tree):
 	sorted_graph = Graph()
-	for vert in tree.pop():
+	for vert in tree:
+		#~ print(vert[0])
 		sorted_graph.add_edge(vert[0], vert[1])
 	
 	return sorted_graph
@@ -240,9 +254,6 @@ def tree_to_graph(tree):
 def find_cost (edges, cost):
 	return sum([cost(u, v) for (u, v) in edges])
 
-
-g = build_graph()
-#~ least_cost_path(g,?,?,g.cost_distance())
 
 #~ def dijkstra(g, v, cost):
 	#~ '''
@@ -305,12 +316,12 @@ g = build_graph()
 	#~ mst = kruskal(wg, wg.get_weight)
 	#~ assert find_cost(mst, wg.get_weight) == 17
 
-def svr():
+def svr(g):
 	State = Enum('State', 'R N AN W A E ERR')
 	state = State.R
 
-	while state != E and state != ERR:
-		if state == R:                                          		 #wait for cli request
+	while state != State.E and state != State.ERR:
+		if state == State.R:                                          		 #wait for cli request
 			print(state)
 			l = input().split()                                         	#get request
 			if l[0] == "R":                                         	#if line actualy request
@@ -318,7 +329,7 @@ def svr():
 				latStart, lonStart, latDest, lonDest = inp[0:4]        	#get data from request
 				state = State.N                                         	#next step / first acknowledge
 				
-		elif state == N:                                                #find path
+		elif state == State.N:                                                #find path
 			print(state)
 			start, dest = (None, None)
 			for vOfC in g._coord.keys():
@@ -331,21 +342,22 @@ def svr():
 				else:
 					break
 			
-			path = least_cost_path(g, start, dest, g.cost_distance())                  #get path
+			cost_distance.g = g
+			path = least_cost_path(g, start, dest, cost_distance)                  #get path
 			print("N", len(path))                                       #send cli path len
 			if len(path) == 0:                                          #if no path
 				state = State.R                                         #   wait for new 'R'
 			else:                                                       #else
 				state = State.AN                                        #   next step
 				
-		elif state == AN:                                               #first acknowledge
+		elif state == State.AN:                                               #first acknowledge
 			print(state)
 			t = input.split()                                           #get N data
 			if t[0] == "N" and int(t[1]) != 0:                          #if data is actually N and not 0
 				print("A")                                              #   send first acknowledgement
 				state = State.W                                         #   next step
 				
-		elif state == W:                                                #send next cords in path
+		elif state == State.W:                                                #send next cords in path
 			print(state)
 			if len(path) == 0:                                          #if path at dest
 				state = State.E                                         #   end step
@@ -354,7 +366,7 @@ def svr():
 				print("W", g._coord[point][0], g._coord[point][1], sep = ' ')                         #   send cords
 				state = State.A                                         #   next acknowledge
 			
-		elif state == A:                                                #acknowledge
+		elif state == State.A:                                                #acknowledge
 			print(state)
 			inp = input()                                               #get W data
 			if inp == "W":                                              #if actualy W data
@@ -363,7 +375,7 @@ def svr():
 			elif inp == "E":                                             #elif E
 				state = State.E                                         #   end step
 				
-		elif state == E:                                                #path done
+		elif state == State.E:                                                #path done
 			print("Finished giving path or 'R'")                        #path done
 			print(state)                                                #path done
 			
@@ -373,3 +385,6 @@ def svr():
 			print(state)                                                #ERROR
 			
 	print("Done")
+
+#~ g = build_graph()
+#~ svr(g)
