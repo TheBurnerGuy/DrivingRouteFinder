@@ -202,6 +202,9 @@ def least_cost_path(graph, start, dest, cost):
         #Else add neighbours of end into todo and loop
         end = new_graph.neighbours(end).pop()
         reached.append(end)
+        if end == dest:
+            #If end is destination, return reached
+            return reached
         todo.append(end)
     
     todo = [].append(new_graph.neighbours(dest)
@@ -212,7 +215,10 @@ def least_cost_path(graph, start, dest, cost):
             break
         #Else add neighbours of end into todo and loop
         end = new_graph.neighbours(end).pop()
-        reached.append(end)
+        reached_l.append(end)
+        if end == start:
+            #If end is start, return reached
+            return reached_l.reverse()
         todo.append(end)
 
     #Check if representative of start and dest are same, otherwise return empty list
