@@ -202,9 +202,6 @@ def least_cost_path(graph, start, dest, cost):
         #Else add neighbours of end into todo and loop
         end = new_graph.neighbours(end).pop()
         reached.append(end)
-        if end == dest:
-            #If end is destination, return reached
-            return reached
         todo.append(end)
     
     todo = [].append(new_graph.neighbours(dest)
@@ -215,10 +212,7 @@ def least_cost_path(graph, start, dest, cost):
             break
         #Else add neighbours of end into todo and loop
         end = new_graph.neighbours(end).pop()
-        reached_l.append(end)
-        if end == start:
-            #If end is start, return reached
-            return reached_l.reverse()
+        reached.append(end)
         todo.append(end)
 
     #Check if representative of start and dest are same, otherwise return empty list
@@ -320,27 +314,39 @@ def svr()
 				state = State.N                                         	#next step / first acknowledge
 				
 		elif state == N:                                                #find path
-			print(state)
-            		path = leastCostPath(g, start, dest, cost)                  #get path
-            		print("N", len(path))                                       #send cli path len
-            		if len(path) == 0:                                          #if no path
-                		state = State.R                                         #   wait for new 'R'
-            		else:                                                       #else
-                		state = State.AN                                        #   next step
+            print(state)
+            start, dest = (None, None)
+            for vOfC in g._coord.keys()
+                if start != None:
+                    if g._coord[vOfC] == (latStart, lonStart)
+                        start = g.coord[vOfC]
+                elif dest != None:
+                    if g._coord[vOfC] == (latDest, lonDest)
+                        dest = g.coord[vOfC]
+                else:
+                    break
+            
+            path = least_cost_path(g, start, dest, g.cost_distance())                  #get path
+            print("N", len(path))                                       #send cli path len
+            if len(path) == 0:                                          #if no path
+                state = State.R                                         #   wait for new 'R'
+            else:                                                       #else
+                state = State.AN                                        #   next step
                 
 		elif state == AN:                                               #first acknowledge
 			print(state)
-            		t = input.split()                                           #get N data
+                t = input.split()                                           #get N data
 			if t[0] == "N" and int(t[1]) != 0:                          #if data is actually N and not 0
-                		print("A")                                              #   send first acknowledgement
+                print("A")                                              #   send first acknowledgement
 				state = State.W                                         #   next step
 				
 		elif state == W:                                                #send next cords in path
 			print(state)
 			if len(path) == 0:                                          #if path at dest
 				state = State.E                                         #   end step
-			elif len(path) != 0:                                        #else
-				print("W", lat, lon, sep = ' ')                         #   send cords
+			elif len(path) != 0:
+                point = path.pop(0)                                  #else
+				print("W", g._coord[point][0], g._coord[point][1], sep = ' ')                         #   send cords
 				state = State.A                                         #   next acknowledge
 			
 		elif state == A:                                                #acknowledge
