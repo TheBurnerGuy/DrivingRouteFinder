@@ -160,7 +160,7 @@ def latlon_to_integer(coord):
 	return int(float(coord)*100000)
 
 def build_graph():
-	g = WeightedGraph()
+	g = UndirectedGraph()
 	with open("edmonton-roads-2.0.1.txt") as file: # Assumes filename is edmonton-roads-2.0.1.txt
 		for line in file: # Variable 'line' loops over each line in the file
 			line = line.strip().split(',') # Remove trailing newline character and splits line into list
