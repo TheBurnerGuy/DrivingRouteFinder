@@ -188,7 +188,7 @@ def kruskal (graph, cost):
 def least_cost_path(graph, start, dest, cost):
 	tree = kruskal(graph,cost)
 	reached = [].append(start)
-	todo = [].append(start)
+	new_graph = tree_to_graph(tree)
 	while todo:
 		#unfinished
 		vertex =
