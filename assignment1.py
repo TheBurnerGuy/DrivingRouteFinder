@@ -89,13 +89,15 @@ class WeightedGraph (Graph):
         '''
         return vertex in self._alist
     
-    def cost_distance(self,u,v):
-		'''
-		Takes u and v as vertices in the graph (g)
-		uses Euclidean distance calculation and returns distance in 100,000 degree form
-		'''
-		return sqrt(abs(self._coord[u][0] - self._coord[v][0])**2
-		+abs(self._coord[u][1] - self._coord[v][1])**2)
+
+def cost_distance(u,v):
+	'''
+	Takes u and v as vertices in the graph (g)
+	uses Euclidean distance calculation and returns distance in 100,000 degree form
+	Requires g as the graph before calling.
+	'''
+	return sqrt(abs(cost_distance.g._coord[u][0] - cost_distance.g._coord[v][0])**2
+	+abs(cost_distance.g._coord[u][1] - cost_distance.g._coord[v][1])**2)
 
 class UndirectedGraph (WeightedGraph):
     '''An undirected graph has edges that are unordered pairs of
@@ -127,7 +129,8 @@ def kruskal (graph, cost):
 
     edges = [(u, v) for u in graph.vertices() for v in graph.neighbours(u)]
 
-    edges.sort(key=lambda edge: cost_distance(graph, edge[0], edge[1]))
+    cost.g = graph
+    edges.sort(key=lambda edge: cost(edge[0], edge[1]))
 
     tree = []
     uf = UnionFind(graph.vertices())
