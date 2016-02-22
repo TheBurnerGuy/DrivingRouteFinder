@@ -37,7 +37,6 @@ void initialize_joystick();
 uint8_t process_joystick(int16_t *dx, int16_t *dy);
 void status_msg(char *msg);
 void clear_status_msg();
-void cli(LonLat32 start, LonLat32 end);
  
 // Interrupt routines for zooming in and out.
 void handle_zoom_in();
@@ -144,7 +143,7 @@ bool waitOnSerial(long timeout){
   return Serial.available();
 }
  
-void cli( LonLat32 start, LonLat32 end){
+void cli(){
     typedef enum {R, N, AN, W, A, E, ERR}State;  
     State state = R;
     int n = 0;
@@ -171,7 +170,7 @@ void cli( LonLat32 start, LonLat32 end){
             lineSize = serial_readline(input,100);
             if(input[0] == 'W'){
             	int nextIndex = 0;
-            	char* lat, lon = ""
+            	char* lat, lon = "";
             	nextIndex = string_read_field(input,nextIndex,lat,20,' ');
             	nextIndex = string_read_field(input,nextIndex,lon,20,' ');
                 path[n] = LonLat32(stoi(lat), stoi(lon));
@@ -192,11 +191,13 @@ void cli( LonLat32 start, LonLat32 end){
            
         }else if(state = E){
             //path complete
-            return
+            break;
            
         }else if(state = ERR){
             //no path
-            return
+            LatLon32* blank;
+            path = blank;
+            break;
            
         }else{
             //major logic error / or timeout
@@ -210,7 +211,7 @@ void cli( LonLat32 start, LonLat32 end){
 void draw_path(){
 	for(int i=0; i < path.size()-1; i++){
     	tft.drawLine(longitude_to_x(current_map_num,path[i].lon),latitude_to_y(current_map_num,path[i].lat),
-    	longitude_to_x(current_map_num,path[i+1].lon),latitude_to_y(current_map_num,path[i+1].lat),0)
+    	longitude_to_x(current_map_num,path[i+1].lon),latitude_to_y(current_map_num,path[i+1].lat),0);
 	}
 }
 
@@ -358,7 +359,7 @@ void loop() {
             debug_msg("Stored end");
             end = p;
             request_state = RS_WAIT_FOR_START;
-            cli(start, end)
+            cli();
             // Serial.println("Done with communication");
         }
         // <<<<<<<<<<<<<<<<<<<< SERIAL <<<<<<<<<<<<<<<<<<<<
