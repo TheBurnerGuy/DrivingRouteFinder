@@ -43,7 +43,7 @@ void handle_zoom_in();
 void handle_zoom_out();
  
 // global variables
- 
+ int* path;
  
 // globally accessible screen
 Adafruit_ST7735 tft = Adafruit_ST7735(tft_cs, tft_dc, tft_rst);
@@ -197,7 +197,16 @@ void cli(start, end){
         }
     }
 }
- 
+
+//WORKING IN PROGRESS###################################################################################
+void draw_path(){
+	tft.stroke(0,0,0);
+	for(int i=0; i < path.size()-1; i++){
+    	tft.line(longitude_to_x(current_map_num,path[i]),latitude_to_y(current_map_num,path[i]),
+    	longitude_to_x(current_map_num,path[i+1]),latitude_to_y(current_map_num,path[i+1]))
+	}
+}
+
 void loop() {
  
     // Make sure we don't update the map tile on screen when we don't need to!
@@ -364,6 +373,8 @@ void loop() {
         draw_cursor();
  
         // Need to redraw any other things that are on the screen. Hint: Path
+        //WORK IN PROGRESS CODE:
+        draw_path();
  
         // force a redisplay of status message
         clear_status_msg();
