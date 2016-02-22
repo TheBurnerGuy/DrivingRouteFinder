@@ -154,7 +154,7 @@ void cli(LonLat32 start, LonLat32 end){
             state = N;
            
         }else if(state == N && waitOnSerial(10000)){
-            lineSize = serial_readline(input,100); //TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+            lineSize = serial_readline(input,5); //TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             if(input[0] == 'N' && input[2] != '0'){
                 state = AN;
             }else{
@@ -166,8 +166,10 @@ void cli(LonLat32 start, LonLat32 end){
             state = W;
        
         }else if(state == W && waitOnSerial(1000)){
-            input = Serial.read().split();
+            lineSize = serial_readline(input,100);
             if(input[0] == 'W'){
+            	srv_get_pathlen();//TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+            	srv_get_waypoints(;)
                 path[n] = (input[1], input[2]);
                 n += 1;
                 state = A;
