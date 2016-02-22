@@ -170,7 +170,8 @@ void cli( LonLat32 start, LonLat32 end){
         }else if(state == W && waitOnSerial(1000)){
             lineSize = serial_readline(input,100);
             if(input[0] == 'W'){
-                path[n] = (input[2], input[4]);
+            	//add in separator here ##########################################
+                path[n] = LatLon32(input[2], input[4]);
                 n += 1;
                 state = A;
             }else{
@@ -204,10 +205,9 @@ void cli( LonLat32 start, LonLat32 end){
 
 //WORKING IN PROGRESS###################################################################################
 void draw_path(){
-	tft.stroke(0,0,0);
 	for(int i=0; i < path.size()-1; i++){
-    	tft.line(longitude_to_x(current_map_num,path[i]),latitude_to_y(current_map_num,path[i]),
-    	longitude_to_x(current_map_num,path[i+1]),latitude_to_y(current_map_num,path[i+1]))
+    	tft.drawLine(longitude_to_x(current_map_num,path[i].lon),latitude_to_y(current_map_num,path[i].lat),
+    	longitude_to_x(current_map_num,path[i+1].lon),latitude_to_y(current_map_num,path[i+1].lat),0)
 	}
 }
 
