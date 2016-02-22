@@ -318,6 +318,7 @@ def svr(g, serial_in, serial_out):
 			print(len(path), file = serial_out) #DEBUG: print path length
 			if len(path) == 0:
 				'''if the path length returns 0 then there is no path, wait for new request'''
+				print("N 0\n", file = serial_out)
 				state = State.R
 			else:
 				'''else, wait for client to acknowledge data received'''
