@@ -170,8 +170,11 @@ void cli( LonLat32 start, LonLat32 end){
         }else if(state == W && waitOnSerial(1000)){
             lineSize = serial_readline(input,100);
             if(input[0] == 'W'){
-            	//add in separator here ##########################################
-                path[n] = LatLon32(input[2], input[4]);
+            	int nextIndex = 0;
+            	char* lat, lon = ""
+            	nextIndex = string_read_field(input,nextIndex,lat,20,' ');
+            	nextIndex = string_read_field(input,nextIndex,lon,20,' ');
+                path[n] = LonLat32(stoi(lat), stoi(lon));
                 n += 1;
                 state = A;
             }else{
