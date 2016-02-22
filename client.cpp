@@ -147,7 +147,7 @@ void cli(LonLat32 start, LonLat32 end){
     typedef enum {R, N, AN, W, A, E, ERR}State;  
     State state = R;
     int n = 0;
-    String input = "";
+    char* input = "";
     while((state != E) && (state != ERR)){
         if(state == R){
             Serial.write("R "+ start.lat+" "+ start.lon+" "+end.lat+ " "+end.lon);
