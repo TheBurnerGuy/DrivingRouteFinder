@@ -43,7 +43,7 @@ void handle_zoom_in();
 void handle_zoom_out();
  
 // global variables
- int* path;
+ LonLat32* path;
  
 // globally accessible screen
 Adafruit_ST7735 tft = Adafruit_ST7735(tft_cs, tft_dc, tft_rst);
