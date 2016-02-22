@@ -154,7 +154,7 @@ void cli(LonLat32 start, LonLat32 end){
             state = N;
            
         }else if(state == N && waitOnSerial(10000)){
-            input = Serial.read();
+            lineSize = serial_readline(input,100); //TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             if(input[0] == 'N' && input[2] != '0'){
                 state = AN;
             }else{
