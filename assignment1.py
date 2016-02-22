@@ -172,6 +172,21 @@ def cost_distance(u,v):
 		return sqrt(abs(cost_distance.g._coord[u][0] - cost_distance.g._coord[v][0])**2
 		+abs(cost_distance.g._coord[u][1] - cost_distance.g._coord[v][1])**2)
 
+def find_closest_vertex(graph, lat, lon):
+	'''Takes closes vertex to selected lat and lon location based on graph'''
+	closest = -1
+	closestDistance = 0
+	for vertex in graph._alist.keys():
+		if closest==-1:
+			closest = vertex
+			closestDistance = sqrt(abs(cost_distance.graph._coord[vertex][0] - lat)**2+abs(cost_distance.graph._coord[vertex][1] - lon)**2)
+		else:
+			distance = sqrt(abs(cost_distance.graph._coord[vertex][0] - lat)**2+abs(cost_distance.graph._coord[vertex][1] - lon)**2)
+			if distance < closestDistance:
+				closest = vertex
+				closestDistance = distance
+	return closest
+
 class UndirectedGraph (WeightedGraph):
 	'''An undirected graph has edges that are unordered pairs of
 	vertices; in other words, an edge from A to B is the same as one
@@ -270,6 +285,10 @@ def svr(g, serial_in, serial_out):
 			'''Now that input is actualy the request, take coordinates from request line'''
 			inp = [int(line[i]) for i in range(1,5)]
 			latStart, lonStart, latDest, lonDest = inp[0:4]
+			closestStartVertex = find_closest_vertex(g, latStart, lonStart)
+			closestEndVertex = find_closest_vertex(g, latDest, lonDest)
+			latStart, lonStart = g._coord(closestStartVertex)
+			latDest, lonDest = g._coord(closestEndVertex)
 			print(latStart, lonStart, latDest, lonDest) #DEBUG: print coordinates entered
 			state = State.N
 				
@@ -281,14 +300,14 @@ def svr(g, serial_in, serial_out):
 				'''With the lon and lats provided find the vertices in the graph'''
 				if start != None:
 					if g._coord[vOfC] == (latStart, lonStart):
-						start = g.coord[vOfC]
+						start = vOfC
 					elif g._coord[vOfC] == (latDest, lonDest):
-						dest = g.coord[vOfC]
+						dest = vOfC
 				elif dest != None:
 					if g._coord[vOfC] == (latDest, lonDest):
-						dest = g.coord[vOfC]
+						dest = vOfC
 					elif g._coord[vOfC] == (latStart, lonStart):
-						start = g.coord[vOfC]
+						start = vOfC
 				else:
 					break
 			
