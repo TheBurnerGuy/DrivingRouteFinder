@@ -374,7 +374,9 @@ void loop() {
  
         // Need to redraw any other things that are on the screen. Hint: Path
         //WORK IN PROGRESS CODE:
-        draw_path();
+        if(path.size()){
+        	draw_path();
+        }
  
         // force a redisplay of status message
         clear_status_msg();
