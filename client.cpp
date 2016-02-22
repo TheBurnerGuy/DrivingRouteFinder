@@ -143,19 +143,19 @@ bool waitOnSerial(long timeout){
   return Serial.available();
 }
  
-void cli(start, end){
+void cli(LonLat32 start, LonLat32 end){
     typedef enum {R, N, AN, W, A, E, ERR}State;  
     State state = R;
     int n = 0;
     String input = "";
     while((state != E) && (state != ERR)){
         if(state == R){
-            Serial.write('R', start, end)
-            state = N
+            Serial.write("R "+ start.lat+" "+ start.lon+" "+end.lat+ " "+end.lon);
+            state = N;
            
         }else if(state == N && waitOnSerial(10000)){
-            input = Serial.read().split();
-            if(input[0] == 'N' && int(input[1]) > 0){
+            input = Serial.read();
+            if(input[0] == 'N' && input[2] != '0'){
                 state = AN;
             }else{
                 state = ERR;
@@ -169,7 +169,7 @@ void cli(start, end){
             input = Serial.read().split();
             if(input[0] == 'W'){
                 path[n] = (input[1], input[2]);
-                n += 1
+                n += 1;
                 state = A;
             }else{
                 state = ERR;
@@ -186,9 +186,11 @@ void cli(start, end){
            
         }else if(state = E){
             //path complete
+            return
            
         }else if(state = ERR){
             //no path
+            return
            
         }else{
             //major logic error / or timeout
