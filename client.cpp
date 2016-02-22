@@ -37,6 +37,7 @@ void initialize_joystick();
 uint8_t process_joystick(int16_t *dx, int16_t *dy);
 void status_msg(char *msg);
 void clear_status_msg();
+void cli(LonLat32 start, LonLat32 end);
  
 // Interrupt routines for zooming in and out.
 void handle_zoom_in();
@@ -143,10 +144,11 @@ bool waitOnSerial(long timeout){
   return Serial.available();
 }
  
-void cli(LonLat32 start, LonLat32 end){
+void cli( LonLat32 start, LonLat32 end){
     typedef enum {R, N, AN, W, A, E, ERR}State;  
     State state = R;
     int n = 0;
+    int pathLen = 0;
     char* input = "";
     while((state != E) && (state != ERR)){
         if(state == R){
@@ -154,8 +156,8 @@ void cli(LonLat32 start, LonLat32 end){
             state = N;
            
         }else if(state == N && waitOnSerial(10000)){
-            lineSize = serial_readline(input,5); //TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             if(input[0] == 'N' && input[2] != '0'){
+                pathLen = stoi(input[2]);
                 state = AN;
             }else{
                 state = ERR;
@@ -168,9 +170,7 @@ void cli(LonLat32 start, LonLat32 end){
         }else if(state == W && waitOnSerial(1000)){
             lineSize = serial_readline(input,100);
             if(input[0] == 'W'){
-            	srv_get_pathlen();//TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-            	srv_get_waypoints(;)
-                path[n] = (input[1], input[2]);
+                path[n] = (input[2], input[4]);
                 n += 1;
                 state = A;
             }else{
