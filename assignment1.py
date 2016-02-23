@@ -1,7 +1,7 @@
 from enum import Enum
 from math import sqrt
-import serial
-import signal
+import argparse
+import textserial
 
 class MinHeap:
     def __init__(self):
@@ -169,8 +169,8 @@ def cost_distance(u,v):
 	Takes u and v as vertices in the graph (g)
 	uses Euclidean distance calculation and returns distance in 100,000 degree form
 	Requires g as the graph before calling.'''
-		return sqrt(abs(cost_distance.g._coord[u][0] - cost_distance.g._coord[v][0])**2
-		+abs(cost_distance.g._coord[u][1] - cost_distance.g._coord[v][1])**2)
+	return sqrt(abs(cost_distance.g._coord[u][0] - cost_distance.g._coord[v][0])**2
+	+abs(cost_distance.g._coord[u][1] - cost_distance.g._coord[v][1])**2)
 
 def find_closest_vertex(graph, lat, lon):
 	'''Takes closes vertex to selected lat and lon location based on graph'''
@@ -265,24 +265,53 @@ def least_cost_path(graph, start, dest, cost):
 	#Return path
 	return path
 
-def svr(g, serial_in, serial_out):
+def parse_args():
+    """
+    Parses arguments for this program.
+    
+    Returns:
+    An object with the following attributes:
+     serialport (str): what is after -s or --serial on the command line
+    """
+    # try to automatically find the port
+    port = textserial.get_port()
+    if port==None:
+        port = "0"
+
+    parser = argparse.ArgumentParser(
+          description='Serial port communication testing program.'
+        , epilog = 'If the port is 0, stdin/stdout are used.\n'
+        )
+    parser.add_argument('-s', '--serial',
+                        help='path to serial port '
+                             '(default value: "%s")' % port,
+                        dest='serialport',
+                        default=port)
+
+    return parser.parse_args()
+
+def srv(g, serial_in, serial_out):
 	'''Args = Graph(), port in, port out: 
 	Simple server side statemachine'''
 	
 	State = Enum('State', 'R N AN W A E ERR')
 	state = State.R
 	ser.setTimeout(1)
+	line = "a b"
 
 	while state != State.ERR:
 		if state == State.R:
 			'''Wait for client request'''
 			print(state) #DEBUG: print current state
-			while line.split[0] not 'R':
+			while line[0] != 'R':
 				'''Check if input is not request, then clear buffer'''
 				line = serial_in.readline()
 				line = line.strip('\r\n')
 				print("Buffer: <%s>" % line) #DEBUG: print line entered when not request
+				if len(line) == 0:
+					line = "a"
 			'''Now that input is actualy the request, take coordinates from request line'''
+			line = line.split();
 			inp = [int(line[i]) for i in range(1,5)]
 			latStart, lonStart, latDest, lonDest = inp[0:4]
 			closestStartVertex = find_closest_vertex(g, latStart, lonStart)
@@ -373,24 +402,11 @@ def svr(g, serial_in, serial_out):
 			print(state) #DEBUG: print current state
 			print("There was an error")
 
-if __name__ == '__main__':
-	# Graph from worksheet
-	wg = WeightedGraph()
-	edges = [(1, 2, 2), (1, 3, 3), (2, 3, 3),
-			 (2, 4, 3), (2, 5, 1), (3, 6, 2),
-			 (4, 5, 4), (5, 6, 4), (4, 7, 2), (5, 8, 3), (6, 8, 1), (6, 9, 5),
-			 (4, 10, 1), (7, 10, 2), (8, 9, 3), (8, 10, 4), (10, 9, 2)]
-	for (u, v, weight) in edges:
-		wg.add_edge(u, v)
-
-	mst = kruskal(wg, wg.get_weight)
-	assert find_cost(mst, wg.get_weight) == 17
-else:
-	g = build_graph()
-	args = parse_args()
-            
-    if args.serialport!="0":
-        print("Opening serial port: %s" % args.serialport)
-        baudrate = 9600 # [bit/seconds] 115200 also works
-        with textserial.TextSerial(args.serialport,baudrate,newline=None) as ser:
-            srv(g,ser,ser)
+g = build_graph()
+args = parse_args()
+           
+if args.serialport!="0":
+    print("Opening serial port: %s" % args.serialport)
+    baudrate = 9600 # [bit/seconds] 115200 also works
+    with textserial.TextSerial(args.serialport,baudrate,newline=None) as ser:
+        srv(g,ser,ser)
