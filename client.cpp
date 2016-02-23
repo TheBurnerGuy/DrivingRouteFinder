@@ -2,6 +2,7 @@
 #include <Adafruit_ST7735.h>
 #include <SD.h>
 #include <mem_syms.h>
+#include <stdlib.h>
  
 #include "map.h"
 #include "serial_handling.h"
@@ -44,6 +45,8 @@ void handle_zoom_out();
  
 // global variables
  LonLat32* path;
+ LonLat32* blank;
+ int pathLen;
  
 // globally accessible screen
 Adafruit_ST7735 tft = Adafruit_ST7735(tft_cs, tft_dc, tft_rst);
@@ -143,20 +146,48 @@ bool waitOnSerial(long timeout){
   return Serial.available();
 }
  
-void cli(){
+void clientMachine(){
+	debug_msg("lmao");
     typedef enum {R, N, AN, W, A, E, ERR}State;  
     State state = R;
     int n = 0;
-    int pathLen = 0;
-    char* input = "";
+    pathLen = 0;
+    int lineSize = 0;
+    char* input = " ";
+    char* output = " ";
+    char* buffer0 = " ";
+    char* buffer1 = " ";
+    char* buffer2 = " ";
+    char* buffer3 = " ";
+    debug_msg(state);
     while((state != E) && (state != ERR)){
         if(state == R){
-            Serial.write("R "+ start.lat+" "+ start.lon+" "+end.lat+ " "+end.lon);
+			
+			debug_msg(buffer0);
+			debug_msg("State R");
+			debug_msg("State R");
+			buffer0 = itoa(start.lat);
+			debug_msg( buffer0);
+			debug_msg( buffer0);
+			debug_msg( buffer0);
+			debug_msg( buffer0);
+			//~ itoa(start.lon,buffer1,10);
+			//~ itoa(end.lat,buffer2,10);
+			//~ itoa(end.lon,buffer3,10);
+			//~ Serial.write(buffer0);
+			//~ Serial.write(buffer1);
+			//~ output = strcat(strcat(("R ", buffer0), strcat(" ", buffer1)), strcat(strcat(" ", buffer2), strcat(" ", buffer3)));
+            
+            //~ debug_msg(output);
+            Serial.write("R");
             state = N;
            
         }else if(state == N && waitOnSerial(10000)){
+			lineSize = serial_readline(input, 100);
             if(input[0] == 'N' && input[2] != '0'){
-                pathLen = stoi(input[2]);
+				char* c;
+				c[0] = input[2];
+                pathLen = atoi(c);
                 state = AN;
             }else{
                 state = ERR;
@@ -170,10 +201,11 @@ void cli(){
             lineSize = serial_readline(input,100);
             if(input[0] == 'W'){
             	int nextIndex = 0;
-            	char* lat, lon = "";
-            	nextIndex = string_read_field(input,nextIndex,lat,20,' ');
-            	nextIndex = string_read_field(input,nextIndex,lon,20,' ');
-                path[n] = LonLat32(stoi(lat), stoi(lon));
+            	char* lat;
+            	char* lon;
+            	nextIndex = string_read_field(input,nextIndex,lat,20," ");
+            	nextIndex = string_read_field(input,nextIndex,lon,20," ");
+                path[n] = LonLat32(atoi(lat), atoi(lon));
                 n += 1;
                 state = A;
             }else{
@@ -195,7 +227,6 @@ void cli(){
            
         }else if(state = ERR){
             //no path
-            LatLon32* blank;
             path = blank;
             break;
            
@@ -209,7 +240,7 @@ void cli(){
 
 //WORKING IN PROGRESS###################################################################################
 void draw_path(){
-	for(int i=0; i < path.size()-1; i++){
+	for(int i=0; i < pathLen-1; i++){
     	tft.drawLine(longitude_to_x(current_map_num,path[i].lon),latitude_to_y(current_map_num,path[i].lat),
     	longitude_to_x(current_map_num,path[i+1].lon),latitude_to_y(current_map_num,path[i+1].lat),0);
 	}
@@ -358,8 +389,8 @@ void loop() {
         } else { // request_state==RS_WAIT_FOR_STOP
             debug_msg("Stored end");
             end = p;
+            clientMachine();
             request_state = RS_WAIT_FOR_START;
-            cli();
             // Serial.println("Done with communication");
         }
         // <<<<<<<<<<<<<<<<<<<< SERIAL <<<<<<<<<<<<<<<<<<<<
@@ -382,7 +413,7 @@ void loop() {
  
         // Need to redraw any other things that are on the screen. Hint: Path
         //WORK IN PROGRESS CODE:
-        if(path.size()){
+        if(pathLen){
         	draw_path();
         }
  
