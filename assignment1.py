@@ -240,14 +240,14 @@ def least_cost_path(graph, start, dest, cost):
 	#Keep running until all runners have dispersed or goal is reached
 	while runners:
 		#Pop lowest value in runners
-		((start, goal), time) = runners.pop_min()
+		((begin, goal), time) = runners.pop_min()
 		
 		#If already found goal, loop until no more runners.
 		if goal in reached:
 			continue
 		
 		#Adds path into reached if not in reached already
-		reached[goal] = start
+		reached[goal] = begin
 		#If found dest, break
 		if goal == dest:
 			break
