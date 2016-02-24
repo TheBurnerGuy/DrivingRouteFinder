@@ -157,8 +157,10 @@ void clientMachine(){
     int OPL;
     int lineSize = 0;
     char* input = " ";
+    char* lat;
+    char* lon;
     
-    while((state != E) && (state != ERR)){
+    while(true){
         if(state == R){
 			Serial.print("R ");
 			Serial.print(start.lat);
@@ -189,29 +191,33 @@ void clientMachine(){
 				//~ temp = Serial.read();
 			//~ }
             Serial.println('A');
-            pathLen -= 1;
-            if(pathLen <= 0){
-                state = E;
-            }else{
+            //~ pathLen -= 1;
+            //~ if(pathLen <= 0){
+                //~ state = E;
+            //~ }else{
 				//~ Serial.println("  ad");
-                state = W;
-            }
-            
-            //~ state = W;
+                //~ state = W;
+            //~ }
+            //~ 
+            state = W;
        
         }else if(state == W && waitOnSerial(1,1000)){
             lineSize = serial_readline(input,100);
             //~ Serial.println(input);
             if(input[0] == 'W'){
-            	int nextIndex = 2;
-            	char* lat;
-            	char* lon;
+            	int nextIndex = 0;
+            	//~ char* lat;
+            	//~ char* lon;
             	nextIndex = string_read_field(input,nextIndex,lat,20," ");
             	nextIndex = string_read_field(input,nextIndex,lon,20," ");
-                path[n] = LonLat32(atoi(lat), atoi(lon));
+            	Serial.print(lat);
+            	Serial.println(lon);
+                path[n] = LonLat32(string_get_int(lat), string_get_int(lon));
+                //~ Serial.println(atol(lat), atol(lon))
                 n += 1;
                 state = A;
             }else if(input[0] == 'E'){
+                Serial.println('C');
                 state = E;
             }else{
 				state = ERR;
@@ -219,33 +225,40 @@ void clientMachine(){
            
         }else if(state == A){
             Serial.println('A');
+            //~ Serial.print(lat);
+            //~ Serial.print(lon);
             //~ Serial.println(pathLen);
-            pathLen -= 1;
-            
-            
-            char* pathLength;
-            itoa(pathLen,pathLength, 10);
-            tft.setCursor(0, 0);
-            tft.print(pathLength);
-            status_msg(pathLength);
-            if(pathLen <= 0){
-                state = E;
-            }else{
+            //~ pathLen -= 1;
+            //~ 
+            //~ 
+            //~ char* pathLength;
+            //~ itoa(pathLen,pathLength, 10);
+            //~ tft.setCursor(0, 0);
+            //~ tft.print(pathLength);
+            //~ status_msg(pathLength);
+            //~ if(pathLen <= 0){
+                //~ state = E;
+            //~ }else{
 				//~ Serial.println("  ad");
-                state = W;
-            }
+                //~ state = W;
+            //~ }
+            state = W;
            
         }else if(state == E){
             //path complete
-            Serial.println("Chill");
-            for(int i = 0; i < OPL; ++i){
-				Serial.print(path[i].lat);
-				Serial.print(" ");
-				Serial.println(path[i].lon);
-			}
+            Serial.println('D');
+			Serial.print(path[0].lat);
+			Serial.print(' ');
+			Serial.print(path[0].lon);
+			Serial.print(' ');
+			Serial.print(path[1].lat);
+			Serial.print(' ');
+			Serial.print(path[1].lon);
+			Serial.print(' ');
+			Serial.println();
             break;
            
-        }else if(state = ERR){
+        }else if(state == ERR){
             //no path
             Serial.println("Error");
             path = blank;
