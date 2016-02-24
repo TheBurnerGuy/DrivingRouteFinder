@@ -2,6 +2,7 @@ from enum import Enum
 from math import sqrt
 import argparse
 import textserial
+import time
 
 class MinHeap:
     def __init__(self):
@@ -179,12 +180,13 @@ def find_closest_vertex(graph, lat, lon):
 	for vertex in graph._alist.keys():
 		if closest==-1:
 			closest = vertex
-			closestDistance = sqrt(abs(cost_distance.graph._coord[vertex][0] - lat)**2+abs(cost_distance.graph._coord[vertex][1] - lon)**2)
+			closestDistance = sqrt(abs(graph._coord[vertex][0] - lat)**2+abs(graph._coord[vertex][1] - lon)**2)
 		else:
-			distance = sqrt(abs(cost_distance.graph._coord[vertex][0] - lat)**2+abs(cost_distance.graph._coord[vertex][1] - lon)**2)
+			distance = sqrt(abs(graph._coord[vertex][0] - lat)**2+abs(graph._coord[vertex][1] - lon)**2)
 			if distance < closestDistance:
 				closest = vertex
 				closestDistance = distance
+	print(closest)#Debug code to test closest vertex
 	return closest
 
 class UndirectedGraph (WeightedGraph):
@@ -224,6 +226,9 @@ def least_cost_path(graph, start, dest, cost):
 	
 	Running time: O(log(m))
 	'''
+	
+	if start == dest:
+		return []
 	
 	#Creates reached and runners data structure
 	reached = {}
@@ -302,7 +307,8 @@ def srv(g, serial_in, serial_out):
 	while state != State.ERR:
 		if state == State.R:
 			'''Wait for client request'''
-			print(state) #DEBUG: print current state
+			#print(state) #DEBUG: print current state
+			line = "a"
 			while line[0] != 'R':
 				'''Check if input is not request, then clear buffer'''
 				line = serial_in.readline()
@@ -316,48 +322,47 @@ def srv(g, serial_in, serial_out):
 			latStart, lonStart, latDest, lonDest = inp[0:4]
 			closestStartVertex = find_closest_vertex(g, latStart, lonStart)
 			closestEndVertex = find_closest_vertex(g, latDest, lonDest)
-			latStart, lonStart = g._coord(closestStartVertex)
-			latDest, lonDest = g._coord(closestEndVertex)
+			latLonStart = g._coord[closestStartVertex]
+			latStart = int(latLonStart[0])
+			lonStart = int(latLonStart[1])
+			latLonDest = g._coord[closestEndVertex]
+			latDest = int(latLonDest[0])
+			lonDest = int(latLonDest[1])
 			print(latStart, lonStart, latDest, lonDest) #DEBUG: print coordinates entered
 			state = State.N
 				
 		elif state == State.N:
 			'''Find the path and send client the number of vertices'''
-			print(state) #DEBUG: print current state
-			start, dest = (None, None)
-			for vOfC in g._coord.keys():
-				'''With the lon and lats provided find the vertices in the graph'''
-				if start != None:
-					if g._coord[vOfC] == (latStart, lonStart):
-						start = vOfC
-					elif g._coord[vOfC] == (latDest, lonDest):
-						dest = vOfC
-				elif dest != None:
-					if g._coord[vOfC] == (latDest, lonDest):
-						dest = vOfC
-					elif g._coord[vOfC] == (latStart, lonStart):
-						start = vOfC
-				else:
-					break
-			
+			#print(state) #DEBUG: print current state
+			start = closestStartVertex
+			dest = closestEndVertex
 			cost_distance.g = g
 			path = least_cost_path(g, start, dest, cost_distance)
 			'''Lookup the path'''
-			print("N", len(path))
-			print(len(path), file = serial_out) #DEBUG: print path length
+			print("N " + str(len(path)), file = serial_out)
+			print("N " + str(len(path))) #DEBUG: print path length
 			if len(path) == 0:
 				'''if the path length returns 0 then there is no path, wait for new request'''
-				print("N 0\n", file = serial_out)
 				state = State.R
 			else:
 				'''else, wait for client to acknowledge data received'''
 				state = State.AN
 				
-		elif state == State.AN:#
+		elif state == State.AN:
 			'''Wait for arduino to acknowledge it got N ... (TIMEOUT = 1)'''
-			print(state) #DEBUG: print current state
-			an = serial_in.readline().rstrip('\r\n')
-			if an == "A":
+			#print(state) #DEBUG: print current state
+			timeout = 0
+			while line[0] != 'A' and timeout < 1:
+				'''Check if input is not request, then clear buffer'''
+				timeout += 1
+				time.sleep(1)
+				line = serial_in.readline()
+				line = line.strip('\r\n')
+				if len(line) == 0:
+					line = "d"
+				print("BufferAN: <%s>" % line) #DEBUG: print line entered when not request
+				
+			if line[0] == 'A':
 				'''If what is read is acknowledgement, countinue'''
 				state = State.W
 			else:
@@ -365,24 +370,37 @@ def srv(g, serial_in, serial_out):
 				state = State.R
 				
 		elif state == State.W:
-			print(state) #DEBUG: print current state
+			#print(state) #DEBUG: print current state
+			#~ if len(path) == 0:
+				#~ '''if path at destination, finish'''
+			#~ state = State.E
+			#~ elif len(path) != 0:
+				#~ '''else, pop off next vertex,
+						#~ lookup coordinates for said vertex,
+						#~ send to client coordinates'''
+			point = path.pop(0)
+			print("W", g._coord[point][0], g._coord[point][1], sep = ' ', file = serial_out)
+			print("W", g._coord[point][0], g._coord[point][1], sep = ' ') 
+			#DEBUG: print coordinates of lookedup vertex
+			state = State.A
 			if len(path) == 0:
-				'''if path at destination, finish'''
 				state = State.E
-			elif len(path) != 0:
-				'''else, pop off next vertex,
-						lookup coordinates for said vertex,
-						send to client coordinates'''
-				point = path.pop(0)
-				print("W", g._coord[point][0], g._coord[point][1], sep = ' ', file = serial_out)
-				print("W", g._coord[point][0], g._coord[point][1], sep = ' ') 
-				#DEBUG: print coordinates of lookedup vertex
-				state = State.A
 			
-		elif state == State.A:#
-			print(state) #DEBUG: print current state
-			inp = serial_in.readline().rstrip('\r\n')
-			if a == "A":
+		elif state == State.A:
+			#print(state) #DEBUG: print current state
+			timeout = 0
+			line = serial_in.readline().strip('\r\n')
+			while line[0] != 'A' and timeout < 1:
+				'''Check if input is not request, then clear buffer'''
+				timeout += 1
+				time.sleep(1)
+				line = serial_in.readline()
+				line = line.strip('\r\n')
+				if len(line) == 0:
+					line = "e"
+				print("BufferA: <%s>" % line) #DEBUG: print line entered when not request
+				
+			if line[0] == 'A':
 				'''If what is read is acknowledgement, countinue'''
 				state = State.W
 			else:
@@ -391,7 +409,8 @@ def srv(g, serial_in, serial_out):
 				
 		elif state == State.E:
 			'''Debug state, print that done, pritn that returning to state.R and return to 'R' '''
-			print(state) #DEBUG: print current state
+			#print(state) #DEBUG: print current state
+			#print("E", file = serial_out)
 			print("Finished giving path or 'R'")
 			print("Waiting for new request back in state 'R'")
 			state = State.R
@@ -399,7 +418,7 @@ def srv(g, serial_in, serial_out):
 		else:
 			'''Code should never get here unless error in code'''
 			state = State.ERR
-			print(state) #DEBUG: print current state
+			#print(state) #DEBUG: print current state
 			print("There was an error")
 
 g = build_graph()
