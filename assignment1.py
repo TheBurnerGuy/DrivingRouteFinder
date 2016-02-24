@@ -308,14 +308,14 @@ def srv(g, serial_in, serial_out):
 		if state == State.R:
 			'''Wait for client request'''
 			#print(state) #DEBUG: print current state
-			line = "a"
+			line = "x"
 			while line[0] != 'R':
 				'''Check if input is not request, then clear buffer'''
 				line = serial_in.readline()
 				line = line.strip('\r\n')
 				print("Buffer: <%s>" % line) #DEBUG: print line entered when not request
 				if len(line) == 0:
-					line = "a"
+					line = "x"
 			'''Now that input is actualy the request, take coordinates from request line'''
 			line = line.split();
 			inp = [int(line[i]) for i in range(1,5)]
@@ -352,6 +352,7 @@ def srv(g, serial_in, serial_out):
 			'''Wait for arduino to acknowledge it got N ... (TIMEOUT = 1)'''
 			#print(state) #DEBUG: print current state
 			timeout = 0
+			line = "x"
 			while line[0] != 'A' and timeout < 1:
 				'''Check if input is not request, then clear buffer'''
 				timeout += 1
@@ -359,7 +360,7 @@ def srv(g, serial_in, serial_out):
 				line = serial_in.readline()
 				line = line.strip('\r\n')
 				if len(line) == 0:
-					line = "d"
+					line = "x"
 				print("BufferAN: <%s>" % line) #DEBUG: print line entered when not request
 				
 			if line[0] == 'A':
@@ -378,18 +379,21 @@ def srv(g, serial_in, serial_out):
 				#~ '''else, pop off next vertex,
 						#~ lookup coordinates for said vertex,
 						#~ send to client coordinates'''
-			point = path.pop(0)
-			print("W", g._coord[point][0], g._coord[point][1], sep = ' ', file = serial_out)
-			print("W", g._coord[point][0], g._coord[point][1], sep = ' ') 
-			#DEBUG: print coordinates of lookedup vertex
-			state = State.A
 			if len(path) == 0:
+				print('E', file = serial_out)
 				state = State.E
+			else:
+				point = path.pop(0)
+				print("W", g._coord[point][0], g._coord[point][1], sep = ' ', file = serial_out)
+				print("W", g._coord[point][0], g._coord[point][1], sep = ' ') 
+				#DEBUG: print coordinates of lookedup vertex
+				state = State.A
+			
 			
 		elif state == State.A:
 			#print(state) #DEBUG: print current state
 			timeout = 0
-			line = serial_in.readline().strip('\r\n')
+			line = "x"
 			while line[0] != 'A' and timeout < 1:
 				'''Check if input is not request, then clear buffer'''
 				timeout += 1
@@ -397,7 +401,7 @@ def srv(g, serial_in, serial_out):
 				line = serial_in.readline()
 				line = line.strip('\r\n')
 				if len(line) == 0:
-					line = "e"
+					line = "x"
 				print("BufferA: <%s>" % line) #DEBUG: print line entered when not request
 				
 			if line[0] == 'A':
@@ -413,6 +417,7 @@ def srv(g, serial_in, serial_out):
 			#print("E", file = serial_out)
 			print("Finished giving path or 'R'")
 			print("Waiting for new request back in state 'R'")
+			#~ time.sleep(5)
 			state = State.R
 			
 		else:
