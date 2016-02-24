@@ -235,7 +235,7 @@ void clientMachine(){
                 state = W;
             }
            
-        }else if(state = E){
+        }else if(state == E){
             //path complete
             Serial.println("Chill");
             for(int i = 0; i < OPL; ++i){
