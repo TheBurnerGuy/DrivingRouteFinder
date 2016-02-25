@@ -238,7 +238,7 @@ def least_cost_path(graph, start, dest, cost):
 	cost.g = graph
 	
 	#Keep running until all runners have dispersed or goal is reached
-	while runners:
+	while not runners.isempty():
 		#Pop lowest value in runners
 		((begin, goal), time) = runners.pop_min()
 		
@@ -328,7 +328,7 @@ def srv(g, serial_in, serial_out):
 			latLonDest = g._coord[closestEndVertex]
 			latDest = int(latLonDest[0])
 			lonDest = int(latLonDest[1])
-			print(latStart, lonStart, latDest, lonDest) #DEBUG: print coordinates entered
+			#print(latStart, lonStart, latDest, lonDest) #DEBUG: print coordinates entered
 			state = State.N
 				
 		elif state == State.N:
@@ -340,7 +340,7 @@ def srv(g, serial_in, serial_out):
 			path = least_cost_path(g, start, dest, cost_distance)
 			'''Lookup the path'''
 			print("N " + str(len(path)), file = serial_out)
-			print("N " + str(len(path))) #DEBUG: print path length
+			#print("N " + str(len(path)) + " ") #DEBUG: print path length
 			if len(path) == 0:
 				'''if the path length returns 0 then there is no path, wait for new request'''
 				state = State.R
@@ -385,7 +385,7 @@ def srv(g, serial_in, serial_out):
 			else:
 				point = path.pop(0)
 				print("W", g._coord[point][0], g._coord[point][1], sep = ' ', file = serial_out)
-				print("W", g._coord[point][0], g._coord[point][1], sep = ' ') 
+				#print("W", g._coord[point][0], g._coord[point][1], sep = ' ') 
 				#DEBUG: print coordinates of lookedup vertex
 				state = State.A
 			
@@ -418,7 +418,7 @@ def srv(g, serial_in, serial_out):
 			print("Finished giving path or 'R'")
 			print("Waiting for new request back in state 'R'")
 			#~ time.sleep(5)
-			state = State.R
+			state = State.ERR
 			
 		else:
 			'''Code should never get here unless error in code'''
