@@ -69,14 +69,7 @@ void setup() {
     initialize_joystick();
  
     initialize_map();
- 
- //Setting up path to test
- pathLen = 4;
-path[0] = LonLat32(-11350048,5350631);
-path[1] = LonLat32(-11350045,5350538);
-path[2] = LonLat32(-11350257,5350539);
-path[3] = LonLat32(-11350257,5350630);
- 
+
     // Want to start viewing window in the center of the map
     move_window(
         (map_box[current_map_num].W + map_box[current_map_num].E) / 2,
@@ -121,18 +114,17 @@ RequestState request_state = RS_WAIT_FOR_START;
 LonLat32 start = LonLat32(0,0);
 LonLat32 end = LonLat32(0,0);
  
-bool waitOnSerial(uint8_t nbytes, long timeout){
-	//~ Serial.println("hereWOS?");
+bool waitOnSerial(uint8_t nbytes, long timeout){ //timeout function
   unsigned long deadline = millis() + timeout;
   while((Serial.available() < nbytes) && (timeout < 0 || millis() < deadline)){
     delay(1);
   }
-  //~ Serial.println("hereWOS?2222");
   return Serial.available() >= nbytes;
 }
 
  
 void clientMachine(){
+	Serial.flush();
     typedef enum {R, N, AN, W, A, E, ERR}State;  
     State state = R;
     int n = 0;
@@ -144,6 +136,7 @@ void clientMachine(){
     
     while(true){
         if(state == R){
+			//Send server the request
 			Serial.print("R ");
 			Serial.print(start.lat);
 			Serial.print(" ");
@@ -155,95 +148,49 @@ void clientMachine(){
             state = N;
            
         }else if(state == N && waitOnSerial(1, 10000)){
+			//wait for a response from server with path length
+			//timeout after 10 seconds
 			lineSize = serial_readline(input, 100);
             if(input[0] == 'N' && input[2] != '0'){
 				char* c;
-				c[0] = input[2]; //if 2digit number bad
-                pathLen = atoi(c);
-                //~ Serial.print("Path len");
-                //~ Serial.println(pathLen);
-                //~ OPL = pathLen;
+				c[0] = input[2];
+                pathLen = atoi(c);//get the length of the incoming path and store it
                 state = AN;
             }else{
                 state = ERR;
             }
         }else if(state == AN){
-            //~ int temp;
-            //~ while(Serial.available()){
-				//~ temp = Serial.read();
-			//~ }
+            //Tell server you got the length
             Serial.println('A');
-            //
-            //~ pathLen -= 1;
-            //~ if(pathLen <= 0){
-                //~ state = E;
-            //~ }else{
-				//~ Serial.println("  ad");
-                //~ state = W;
-            //~ }
-            //~ 
             state = W;
        
         }else if(state == W && waitOnSerial(1,1000)){
+			//wait for a response from server with a waypoints coords
+			//timeout after 1 seconds
             lineSize = serial_readline(input,100);
             //~ Serial.println(input);
             if(input[0] == 'W'){
-				//~ Serial.println(input);
-				int nextIndex = 2;
-            	//~ char* lat;
-            	//~ char* lon;
-            	nextIndex = string_read_field(input,nextIndex,latReceived,10," ");
-            	//~ lat = strtok(input, " ");
-            	//~ Serial.println(nextIndex);
-            	//~ nextIndex = 9;
+				int nextIndex = 2; //skip W
+				//seperate input for lat and lon
+            	nextIndex = string_read_field(input,nextIndex,latReceived,10," "); 
             	nextIndex = string_read_field(input,nextIndex,lonReceived,10," ");
-            	//~ Serial.println(nextIndex);
-                //~ Serial.println(path[0].lat);
-                //~ useless = strtok(input, " ");
-                //~ lat = strtok(NULL, " ");
-                //~ lon = strtok(NULL, " ");
+            	//store the coords in path
                 path[n] = LonLat32(string_get_int(latReceived), string_get_int(lonReceived));
                 n += 1;
-                //~ Serial.println(n);
                 state = A;
-            }else if(input[0] == 'E'){
-                Serial.println('C');
+            }else if(input[0] == 'E'){//if the input was E then the path is done
                 state = E;
             }else{
 				state = ERR;
 			}
            
         }else if(state == A){
+			//Tell server you got the waypoint
             Serial.println('A');
-            //~ if(n>=pathLen){
-				//~ //Path exhausted, its done
-				//~ state = E;
-			//~ }else{
-				state = W;
-			//~ }
-            //~ char* pathLength;
-            //~ itoa(pathLen,pathLength, 10);
-            //~ tft.setCursor(0, 0);
-            //~ tft.print(pathLength);
-            //~ status_msg(pathLength);
-            //~ if(pathLen <= 0){
-                //~ state = E;
-            //~ }else{
-				//~ Serial.println("  ad");
-                //~ state = W;
-            //~ }
+			state = W;
            
         }else if(state == E){
             //path complete
-            Serial.println('D');
-            for(int i = 0; i < pathLen; i++){
-				Serial.print(path[i].lat);
-				Serial.print(' ');
-				Serial.print(path[i].lon);
-				Serial.print(' ');
-				Serial.println();
-			}
-			
             break;
            
         }else if(state == ERR){
@@ -260,8 +207,8 @@ void clientMachine(){
     }
 }
 
-//WORKING IN PROGRESS###################################################################################
 void draw_path(){
+	//Draws path iterrating through waypoint to waypoint
 	Serial.println("Drawing path! ");
 	for(int i=0; i < pathLen-1; i++){
     	tft.drawLine(latitude_to_y(current_map_num,path[i].lon)-screen_map_x,longitude_to_x(current_map_num,path[i].lat)-screen_map_y,
@@ -276,27 +223,6 @@ void loop() {
  
     if (first_time) {
         first_time = 0;
-        //~ Serial.println(x_to_longitude(current_map_num, 500));
-        //~ Serial.println(y_to_latitude(current_map_num, 500));
-        //~ Serial.println(longitude_to_x(current_map_num,x_to_longitude(current_map_num, 500)));
-        //~ Serial.println(latitude_to_y(current_map_num,y_to_latitude(current_map_num, 500)));
-        //~ Serial.println(path[0].lon);
-        //~ Serial.println(path[0].lat);
-        //~ Serial.println(path[1].lon);
-        //~ Serial.println(path[1].lat);
-        //~ Serial.println(path[2].lon);
-        //~ Serial.println(path[2].lat);
-        //~ Serial.println(path[3].lon);
-        //~ Serial.println(path[3].lat);
-        //~ Serial.println(longitude_to_x(current_map_num,path[0].lon));
-         //~ Serial.println(latitude_to_y(current_map_num,path[0].lat));
-
- //~ Serial.println(longitude_to_x(current_map_num,path[1].lat));
-//~ Serial.println(latitude_to_y(current_map_num,path[1].lon));
- //~ Serial.println(longitude_to_x(current_map_num,path[2].lat));
-//~ Serial.println(latitude_to_y(current_map_num,path[2].lon));
- //~ Serial.println(longitude_to_x(current_map_num,path[3].lat));
-//~ Serial.println(latitude_to_y(current_map_num,path[3].lon));
         update_display_window = 1;
     }
  
@@ -398,9 +324,6 @@ void loop() {
  
         // if the stop point, then we send out the server request and wait.
  
-        // This is a place holder for the code you need to write. This simply
-        // prints the position of the cursor to the Serial port.
-        // Remove these lines and fill in your own code here.
         //~ debug_msg("Button press @ ");
         //~ debug_msg(cursor_lat);
         //~ debug_msg(" ");
@@ -415,6 +338,7 @@ void loop() {
         } else { // request_state==RS_WAIT_FOR_STOP
             //~ Serial.println("Stored end");
             end = p;
+            //when start and end points selected go to statemachine
             clientMachine();
             request_state = RS_WAIT_FOR_START;
             // Serial.println("Done with communication");
@@ -429,7 +353,6 @@ void loop() {
         draw_cursor();
  
         // Need to redraw any other things that are on the screen. Hint: Path
-        //WORK IN PROGRESS CODE:
         if(pathLen){
         	draw_path();
         }
