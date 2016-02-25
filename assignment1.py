@@ -1,4 +1,5 @@
 from enum import Enum
+
 from math import sqrt
 import argparse
 import textserial
@@ -15,7 +16,7 @@ class MinHeap:
     def pop_min(self):
         if not self._array:
             raise RuntimeError("Attempt to call pop_min on empty heap")
-        r = self._array[0] #??
+        r = self._array[0]
         l = self._array[-1]
         del self._array[-1]
         if self._array:
@@ -174,10 +175,11 @@ def cost_distance(u,v):
 	+abs(cost_distance.g._coord[u][1] - cost_distance.g._coord[v][1])**2)
 
 def find_closest_vertex(graph, lat, lon):
-	'''Takes closes vertex to selected lat and lon location based on graph'''
+	'''Takes lat and lon as inputed by the clientand finds the closest vertex 
+	to selected lat and lon location based on graph'''
 	closest = -1
 	closestDistance = 0
-	for vertex in graph._alist.keys():
+	for vertex in graph._alist.keys(): #iterrates through vertices and compares distance to point chosen.
 		if closest==-1:
 			closest = vertex
 			closestDistance = sqrt(abs(graph._coord[vertex][0] - lat)**2+abs(graph._coord[vertex][1] - lon)**2)
@@ -186,7 +188,7 @@ def find_closest_vertex(graph, lat, lon):
 			if distance < closestDistance:
 				closest = vertex
 				closestDistance = distance
-	print(closest)#Debug code to test closest vertex
+	#print(closest)#Debug code to test closest vertex
 	return closest
 
 class UndirectedGraph (WeightedGraph):
@@ -301,8 +303,7 @@ def srv(g, serial_in, serial_out):
 	
 	State = Enum('State', 'R N AN W A E ERR')
 	state = State.R
-	ser.setTimeout(1)
-	line = "a b"
+	line = "x"
 
 	while state != State.ERR:
 		if state == State.R:
@@ -349,12 +350,12 @@ def srv(g, serial_in, serial_out):
 				state = State.AN
 				
 		elif state == State.AN:
-			'''Wait for arduino to acknowledge it got N ... (TIMEOUT = 1)'''
+			'''Wait for arduino to acknowledge it got N and a number (TIMEOUT = 1)'''
 			#print(state) #DEBUG: print current state
 			timeout = 0
 			line = "x"
 			while line[0] != 'A' and timeout < 1:
-				'''Check if input is not request, then clear buffer'''
+				'''Check if input is not 'A', then clear buffer'''
 				timeout += 1
 				time.sleep(1)
 				line = serial_in.readline()
@@ -371,18 +372,13 @@ def srv(g, serial_in, serial_out):
 				state = State.R
 				
 		elif state == State.W:
-			#print(state) #DEBUG: print current state
-			#~ if len(path) == 0:
-				#~ '''if path at destination, finish'''
-			#~ state = State.E
-			#~ elif len(path) != 0:
-				#~ '''else, pop off next vertex,
-						#~ lookup coordinates for said vertex,
-						#~ send to client coordinates'''
+			'''Send Client next waypoint in the path, unless path is finished'''
 			if len(path) == 0:
+				'''If path is done or path never found tell client to its done'''
 				print('E', file = serial_out)
 				state = State.E
 			else:
+				'''Else tell client next waypoints coords and remove that point off path'''
 				point = path.pop(0)
 				print("W", g._coord[point][0], g._coord[point][1], sep = ' ', file = serial_out)
 				#print("W", g._coord[point][0], g._coord[point][1], sep = ' ') 
@@ -395,7 +391,7 @@ def srv(g, serial_in, serial_out):
 			timeout = 0
 			line = "x"
 			while line[0] != 'A' and timeout < 1:
-				'''Check if input is not request, then clear buffer'''
+				'''Check if input is not acknowledgement, then clear buffer'''
 				timeout += 1
 				time.sleep(1)
 				line = serial_in.readline()
@@ -412,12 +408,10 @@ def srv(g, serial_in, serial_out):
 				state = State.R
 				
 		elif state == State.E:
-			'''Debug state, print that done, pritn that returning to state.R and return to 'R' '''
+			'''Debug state, print that done, print that returning to state.R and return to 'R' '''
 			#print(state) #DEBUG: print current state
-			#print("E", file = serial_out)
 			print("Finished giving path or 'R'")
 			print("Waiting for new request back in state 'R'")
-			#~ time.sleep(5)
 			state = State.ERR
 			
 		else:
