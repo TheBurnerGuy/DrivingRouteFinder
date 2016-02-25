@@ -94,11 +94,7 @@ void setup() {
     // Initialize interrupt routines attached to zoom buttons.
     attachInterrupt(zoom_in_interrupt, handle_zoom_in, FALLING);
     attachInterrupt(zoom_out_interrupt, handle_zoom_out, FALLING);
- 
-#ifdef DEBUG_MEMORY
-    Serial.print("Available mem:");
-    Serial.println(AVAIL_MEM);
-#endif
+
 }
  
 const uint16_t screen_scroll_delta = 32;
@@ -117,26 +113,6 @@ typedef enum {
 RequestState request_state = RS_WAIT_FOR_START;
 LonLat32 start = LonLat32(0,0);
 LonLat32 end = LonLat32(0,0);
- 
-// #define __SERVER
- 
-#ifndef __SERVER    
-void debug_msg(char* str) {
-    Serial.print(str);
-}
- 
-void debug_msg(int num) {
-    Serial.print(num);
-}
- 
-void debug_msg(long num) {
-    Serial.print(num);
-}
-#else
-void debug_msg(char* str) {}
-void debug_msg(int num)   {}
-void debug_msg(long num)  {}
-#endif
  
 bool waitOnSerial(uint8_t nbytes, long timeout){
 	//~ Serial.println("hereWOS?");
@@ -180,7 +156,7 @@ void clientMachine(){
                 pathLen = atoi(c);
                 //~ Serial.print("Path len");
                 //~ Serial.println(pathLen);
-                OPL = pathLen;
+                //~ OPL = pathLen;
                 state = AN;
             }else{
                 state = ERR;
@@ -191,6 +167,7 @@ void clientMachine(){
 				//~ temp = Serial.read();
 			//~ }
             Serial.println('A');
+            //
             //~ pathLen -= 1;
             //~ if(pathLen <= 0){
                 //~ state = E;
@@ -204,17 +181,29 @@ void clientMachine(){
         }else if(state == W && waitOnSerial(1,1000)){
             lineSize = serial_readline(input,100);
             //~ Serial.println(input);
-            if(input[0] == 'W'){
-            	int nextIndex = 0;
+            if(input[0] == 'W' && strlen(input) == 20){
+				//~ int nextIndex = 2;
+				char* useless;
             	//~ char* lat;
             	//~ char* lon;
-            	nextIndex = string_read_field(input,nextIndex,lat,20," ");
-            	nextIndex = string_read_field(input,nextIndex,lon,20," ");
-            	Serial.print(lat);
-            	Serial.println(lon);
+            	//~ nextIndex = string_read_field(input,nextIndex,useless,10," ");
+            	//~ lat = strtok(input, " ");
+            	//~ Serial.println(nextIndex);
+            	//~ nextIndex = 9;
+            	//~ nextIndex = string_read_field(input,nextIndex,lon,10,"    ");
+            	//~ Serial.println(nextIndex);
+            	
+                
+                //~ Serial.println(path[0].lat);
+                
+                useless = strtok(input, " ");
+                lat = strtok(NULL, " ");
+                lon = strtok(NULL, " ");
+                //~ Serial.println(lat);
+            	//~ Serial.println(lon);
                 path[n] = LonLat32(string_get_int(lat), string_get_int(lon));
-                //~ Serial.println(atol(lat), atol(lon))
                 n += 1;
+                
                 state = A;
             }else if(input[0] == 'E'){
                 Serial.println('C');
@@ -247,15 +236,14 @@ void clientMachine(){
         }else if(state == E){
             //path complete
             Serial.println('D');
-			Serial.print(path[0].lat);
-			Serial.print(' ');
-			Serial.print(path[0].lon);
-			Serial.print(' ');
-			Serial.print(path[1].lat);
-			Serial.print(' ');
-			Serial.print(path[1].lon);
-			Serial.print(' ');
-			Serial.println();
+            for(int i = 0; i < pathLen; i++){
+				Serial.print(path[i].lat);
+				Serial.print(' ');
+				Serial.print(path[i].lon);
+				Serial.print(' ');
+				Serial.println();
+			}
+			
             break;
            
         }else if(state == ERR){
@@ -301,14 +289,6 @@ void loop() {
    
     // if the map changed as a result of a zoom button press
     if (shared_new_map_num != current_map_num) {
-#ifdef DEBUG_SCROLLING
-        Serial.print("Zoom from ");
-        Serial.print(current_map_num);
-        Serial.print(" x ");
-        Serial.print(cursor_map_x);
-        Serial.print(" y ");
-        Serial.print(cursor_map_y);
-#endif
  
         // change the map and figure out the position of the cursor on
         // the new map.
@@ -318,16 +298,6 @@ void loop() {
         move_window_to( cursor_map_x - display_window_width/2
                       , cursor_map_y - display_window_height/2
         );
- 
-#ifdef DEBUG_SCROLLING
-        Serial.print(" to ");
-        Serial.print(current_map_num);
-        Serial.print(" x ");
-        Serial.print(cursor_map_x);
-        Serial.print(" y ");
-        Serial.print(cursor_map_y);
-        Serial.println();
-#endif
  
         // Changed the zoom level, so we want to redraw the window
         update_display_window = 1;
@@ -409,19 +379,19 @@ void loop() {
         // This is a place holder for the code you need to write. This simply
         // prints the position of the cursor to the Serial port.
         // Remove these lines and fill in your own code here.
-        debug_msg("Button press @ ");
-        debug_msg(cursor_lat);
-        debug_msg(" ");
-        debug_msg(cursor_lon);
-        Serial.println("");
+        //~ debug_msg("Button press @ ");
+        //~ debug_msg(cursor_lat);
+        //~ debug_msg(" ");
+        //~ debug_msg(cursor_lon);
+        //~ Serial.println("");
         // >>>>>>>>>>>>>>>>>>>> SERIAL >>>>>>>>>>>>>>>>>>>>
         LonLat32 p(cursor_lon,cursor_lat);
         if (request_state==RS_WAIT_FOR_START) {
-            Serial.println("Stored start");
+            //~ Serial.println("Stored start");
             start = p;
             request_state = RS_WAIT_FOR_STOP;
         } else { // request_state==RS_WAIT_FOR_STOP
-            Serial.println("Stored end");
+            //~ Serial.println("Stored end");
             end = p;
             clientMachine();
             request_state = RS_WAIT_FOR_START;
@@ -432,16 +402,7 @@ void loop() {
  
     // do we have to redraw the map tile?  
     if (update_display_window) {
-#ifdef DEBUG_SCROLLING
-        Serial.println("Screen update");
-        Serial.print(current_map_num);
-        Serial.print(" ");
-        Serial.print(cursor_lon);
-        Serial.print(" ");
-        Serial.print(cursor_lat);
-        Serial.println();
-#endif
- 
+
         draw_map_screen();
         draw_cursor();
  
