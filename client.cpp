@@ -70,6 +70,13 @@ void setup() {
  
     initialize_map();
  
+ //Setting up path to test
+ pathLen = 4;
+path[0] = LonLat32(-11350048,5350631);
+path[1] = LonLat32(-11350045,5350538);
+path[2] = LonLat32(-11350257,5350539);
+path[3] = LonLat32(-11350257,5350630);
+ 
     // Want to start viewing window in the center of the map
     move_window(
         (map_box[current_map_num].W + map_box[current_map_num].E) / 2,
@@ -130,11 +137,10 @@ void clientMachine(){
     State state = R;
     int n = 0;
     pathLen = 0;
-    int OPL;
     int lineSize = 0;
     char* input = " ";
-    char* lat;
-    char* lon;
+    char* latReceived = "5350539";
+    char* lonReceived = "-11350257";
     
     while(true){
         if(state == R){
@@ -181,29 +187,24 @@ void clientMachine(){
         }else if(state == W && waitOnSerial(1,1000)){
             lineSize = serial_readline(input,100);
             //~ Serial.println(input);
-            if(input[0] == 'W' && strlen(input) == 20){
-				//~ int nextIndex = 2;
-				char* useless;
+            if(input[0] == 'W'){
+				//~ Serial.println(input);
+				int nextIndex = 2;
             	//~ char* lat;
             	//~ char* lon;
-            	//~ nextIndex = string_read_field(input,nextIndex,useless,10," ");
+            	nextIndex = string_read_field(input,nextIndex,latReceived,10," ");
             	//~ lat = strtok(input, " ");
             	//~ Serial.println(nextIndex);
             	//~ nextIndex = 9;
-            	//~ nextIndex = string_read_field(input,nextIndex,lon,10,"    ");
+            	nextIndex = string_read_field(input,nextIndex,lonReceived,10," ");
             	//~ Serial.println(nextIndex);
-            	
-                
                 //~ Serial.println(path[0].lat);
-                
-                useless = strtok(input, " ");
-                lat = strtok(NULL, " ");
-                lon = strtok(NULL, " ");
-                //~ Serial.println(lat);
-            	//~ Serial.println(lon);
-                path[n] = LonLat32(string_get_int(lat), string_get_int(lon));
+                //~ useless = strtok(input, " ");
+                //~ lat = strtok(NULL, " ");
+                //~ lon = strtok(NULL, " ");
+                path[n] = LonLat32(string_get_int(latReceived), string_get_int(lonReceived));
                 n += 1;
-                
+                //~ Serial.println(n);
                 state = A;
             }else if(input[0] == 'E'){
                 Serial.println('C');
@@ -214,12 +215,12 @@ void clientMachine(){
            
         }else if(state == A){
             Serial.println('A');
-            //~ Serial.print(lat);
-            //~ Serial.print(lon);
-            //~ Serial.println(pathLen);
-            //~ pathLen -= 1;
-            //~ 
-            //~ 
+            //~ if(n>=pathLen){
+				//~ //Path exhausted, its done
+				//~ state = E;
+			//~ }else{
+				state = W;
+			//~ }
             //~ char* pathLength;
             //~ itoa(pathLen,pathLength, 10);
             //~ tft.setCursor(0, 0);
@@ -231,7 +232,6 @@ void clientMachine(){
 				//~ Serial.println("  ad");
                 //~ state = W;
             //~ }
-            state = W;
            
         }else if(state == E){
             //path complete
@@ -262,19 +262,41 @@ void clientMachine(){
 
 //WORKING IN PROGRESS###################################################################################
 void draw_path(){
+	Serial.println("Drawing path! ");
 	for(int i=0; i < pathLen-1; i++){
-    	tft.drawLine(longitude_to_x(current_map_num,path[i].lon),latitude_to_y(current_map_num,path[i].lat),
-    	longitude_to_x(current_map_num,path[i+1].lon),latitude_to_y(current_map_num,path[i+1].lat),0);
+    	tft.drawLine(latitude_to_y(current_map_num,path[i].lon)-screen_map_x,longitude_to_x(current_map_num,path[i].lat)-screen_map_y,
+    	latitude_to_y(current_map_num,path[i+1].lon)-screen_map_x,longitude_to_x(current_map_num,path[i+1].lat)-screen_map_y,0);
 	}
 }
 
 void loop() {
- 
+
     // Make sure we don't update the map tile on screen when we don't need to!
     uint8_t update_display_window = 0;
  
     if (first_time) {
         first_time = 0;
+        //~ Serial.println(x_to_longitude(current_map_num, 500));
+        //~ Serial.println(y_to_latitude(current_map_num, 500));
+        //~ Serial.println(longitude_to_x(current_map_num,x_to_longitude(current_map_num, 500)));
+        //~ Serial.println(latitude_to_y(current_map_num,y_to_latitude(current_map_num, 500)));
+        //~ Serial.println(path[0].lon);
+        //~ Serial.println(path[0].lat);
+        //~ Serial.println(path[1].lon);
+        //~ Serial.println(path[1].lat);
+        //~ Serial.println(path[2].lon);
+        //~ Serial.println(path[2].lat);
+        //~ Serial.println(path[3].lon);
+        //~ Serial.println(path[3].lat);
+        //~ Serial.println(longitude_to_x(current_map_num,path[0].lon));
+         //~ Serial.println(latitude_to_y(current_map_num,path[0].lat));
+
+ //~ Serial.println(longitude_to_x(current_map_num,path[1].lat));
+//~ Serial.println(latitude_to_y(current_map_num,path[1].lon));
+ //~ Serial.println(longitude_to_x(current_map_num,path[2].lat));
+//~ Serial.println(latitude_to_y(current_map_num,path[2].lon));
+ //~ Serial.println(longitude_to_x(current_map_num,path[3].lat));
+//~ Serial.println(latitude_to_y(current_map_num,path[3].lon));
         update_display_window = 1;
     }
  
